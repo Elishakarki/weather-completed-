@@ -1,9 +1,14 @@
-import 'dart:convert';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import 'package:flutter/material.dart';
-import 'package:networking/model/location.dart';
+import 'package:networking/services/location.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:networking/services/weather.dart';
+
+import 'location_screen.dart';
+
+const apiKey = "771cc86f3e7ec8b007c8e1e45c108e5d";
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({Key? key}) : super(key: key);
@@ -13,42 +18,32 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
-  double? latitude;
-  double? longitude;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: SpinKitDoubleBounce(
+          color: Colors.white,
+          size: 100.0,
+        ),
+      ),
+    );
+  }
+
   String apiKey = '771cc86f3e7ec8b007c8e1e45c108e5d';
   @override
   void initState() {
-    getLocation();
+    getLocationData();
     // TODO: implement initState
     super.initState();
   }
 
-  void getLocation() async {
-    Location location = Location();
-    await location.getCurrentLocation();
-    latitude = location.latitude;
-    longitude = location.longitude;
-  }
+  void getLocationData() async {
+    WeatherModel weatherModel = WeatherModel();
+    var weatherData = await weatherModel.getLocationWeather();
 
-  void getData() async {
-    http.Response response = await http.get(Uri.parse(
-        'https://api.openweathermap.org/data/2.5/weather?lat=44.34&lon=10.99&appid=771cc86f3e7ec8b007c8e1e45c108e5d'));
-    if (response.statusCode == 200) {
-      String data = response.body;
-      var decodeData = jsonDecode(data);
-      double temperature = decodeData['main']['temp'];
-      int condition = decodeData['weather'][0]["id"];
-      String cityname = decodeData['name'];
-      print(temperature);
-      print(condition);
-      print(cityname);
-    }
-    print(response.statusCode);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    getData();
-    return Scaffold();
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return LocationScreen(locationWeather: weatherData);
+    }));
   }
 }
